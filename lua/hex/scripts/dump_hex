@@ -1,0 +1,2 @@
+#!/usr/bin/bash
+xxd "$1" | cut -c 11-49 > "$2"
