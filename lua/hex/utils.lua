@@ -47,28 +47,42 @@ M.undo_from_ASCII = function()
   do_in_ASCII(f)
 end
 
+M.redo_from_ASCII = function()
+  local f= function()
+    vim.cmd(':redo')
+  end
+  do_in_ASCII(f)
+end
+
 M.int_div = function(dividend, divisor)
   return (dividend - (dividend % divisor)) / divisor
 end
 
 M.HEX_to_ASCII_cursor = function(cursor)
-  local x = cursor[1]-1
   local y = 2 * M.int_div(cursor[2], 5)
   local yc = y
   if cursor[2]%5 > 1 then
     yc = yc + 1
   end
-  return x, y, yc
+  return cursor[1]-1, y, yc
 end
 
 M.ASCII_to_HEX_cursor = function(cursor)
-  local x = cursor[1]-1
   local y = M.int_div(cursor[2], 2) * 5
   local yc = y
   if cursor[2]%2 == 1 then
     yc = yc + 2
   end
-  return x, y, yc
+  return cursor[1]-1, y, yc
+end
+
+M.HEX_search = function(char, s)
+  local chars = {}
+  for char in s:gmatch(".") do
+    table.insert(chars, char)
+  end
+  local pattern_with_space = table.concat(chars, '[\\s\\n]*') 
+  pcall(vim.api.nvim_command, ':'..char..'\\v' .. pattern_with_space)
 end
 
 return M

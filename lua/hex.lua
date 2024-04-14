@@ -1,12 +1,21 @@
 local u = require("hex.utils")
 local refs = require("hex.references")
 local cmd = require("hex.cmd")
-local au = require("hex.autocommands")
+local setup = require("hex.setup")
 local cur = require("hex.cursor")
 
 local M = {}
 
-M.cfg = {}
+M.cfg = {
+  keymaps = {
+    reformat_hex = '<leader>f',
+    replace_ascii = 'r',
+    undo_ascii = 'u',
+    redo_ascii = '<C-R>',
+    run = '<CR>',
+  },
+  run_cmd = function(file) return 'bot sp | term "'..file..'"' end
+}
 
 M.on_HEX_saved = function()
   u.unbind_scroll_and_cursor()
@@ -16,21 +25,22 @@ M.on_HEX_saved = function()
 end
 
 M.open_ASCII = function()
+  refs.close_ASCII_if_visible()
   local file = refs.get_current_file()
-  if file == nil or refs.ASCII_is_visible(file) then
+  if file == nil then
     return
   end
   local ASCII_file = refs.get_ASCII_file(file)
 
-  vim.api.nvim_command(":rightbelow vsplit +10 "..ASCII_file.." | vertical resize 20")
+  u.bind_scroll_and_cursor()
+  vim.api.nvim_command(":rightbelow vsplit "..ASCII_file.." | vertical resize 20")
   u.bind_scroll_and_cursor()
 
   if refs.ASCII_is_new_buf(file) then
-    au.setup_ASCII()
+    setup.setup_ASCII(M.cfg)
   end
-  refs.set_current_ASCII(file)
+  refs.set_current_ASCII()
   vim.cmd('wincmd h')
-  u.bind_scroll_and_cursor()
 end
 
 M.on_ASCII_enter = function()
@@ -64,10 +74,8 @@ M.reformat_HEX = function()
   cmd.dump_HEX(file)
 end
 
-setup_HEX = function(file)
+replace_with_xxd = function(file)
   local original_buf = vim.api.nvim_get_current_buf()
-  cmd.dump_HEX(file)
-  cmd.dump_ASCII(file)
   refs.set_current_hex(file)
   vim.api.nvim_buf_delete(original_buf, { force = true })
 end
@@ -75,30 +83,39 @@ end
 M.on_open = function()
   local file=vim.fn.expand("%:p")
   if u.is_binary(file) then
-    if refs.HEX_file_loaded(file) then
-      setup_HEX(file)
-      M.open_ASCII()
+    if refs.already_dumped(file) then
+      replace_with_xxd(file)
     else
       refs.init(file)
-      setup_HEX(file)
-      M.open_ASCII()
-      au.setup_HEX(file)
+      cmd.dump_HEX(file)
+      cmd.dump_ASCII(file)
+      replace_with_xxd(file)
+      setup.setup_HEX(M.cfg)
     end
+    M.open_ASCII()
   end
 end
 
+M.run = function()
+  local file = refs.get_current_file()
+  vim.api.nvim_command(M.cfg.run_cmd(file))
+end
 
-vim.cmd[[
-  augroup OnHexOpen
-    autocmd!
-    autocmd BufReadPost * lua require'hex'.on_open()
-  augroup END
-]]
+M.setup = function(cfg)
+  if type(cfg) == "table" then
+    M.cfg = vim.tbl_deep_extend("force", M.cfg, cfg)
+  end
+  vim.cmd[[
+    augroup OnHexOpen
+      autocmd!
+      autocmd BufReadPost * lua require'hex'.on_open()
+    augroup END
 
-M.setup = function(args)
-  -- vim.api.nvim_create_user_command('HexDump', M.dump, {})
-  -- vim.api.nvim_create_user_command('HexAssemble', M.assemble, {})
-  -- vim.api.nvim_create_user_command('HexToggle', M.toggle, {})
+    com! -nargs=1 -bang HexSearch lua require'hex.utils'.HEX_search('/', <f-args>)
+    com! -nargs=1 -bang HexSearchBack lua require'hex.utils'.HEX_search('?', <f-args>)
+    com! -nargs=0 -bang HexReformat lua require'hex'.reformat_HEX()
+    com! -nargs=0 -bang HexOpenAscii lua require'hex'.open_ASCII()
+  ]]
 end
 
 return M
