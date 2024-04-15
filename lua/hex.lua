@@ -25,14 +25,14 @@ M.on_HEX_saved = function()
 end
 
 M.open_ASCII = function()
-  refs.close_ASCII_if_visible()
   local file = refs.get_current_file()
-  if file == nil then
+  if file == nil or refs.ASCII_is_visible() then
     return
   end
   local ASCII_file = refs.get_ASCII_file(file)
 
   u.bind_scroll_and_cursor()
+  vim.api.nvim_command(":syncbind")
   vim.api.nvim_command(":rightbelow vsplit "..ASCII_file)
   u.bind_scroll_and_cursor()
 
@@ -103,6 +103,32 @@ M.run = function()
   vim.api.nvim_command(M.cfg.run_cmd(file))
 end
 
+local toggled = false
+
+M.on_ASCII_changed_shell = function()
+  if not toggled then
+    vim.api.nvim_command(":syncbind")
+    u.bind_scroll_and_cursor()
+  end
+end
+
+M.on_HEX_changed_shell = function()
+  if toggled then
+    toggled = false
+    vim.api.nvim_command(":syncbind")
+    u.bind_scroll_and_cursor()
+  end
+end
+
+M.toggle_bin = function()
+  toggled = true
+  refs.toggle_bin()
+  local file = refs.get_current_file()
+  vim.api.nvim_command(":0")
+  actions.dump_HEX(file)
+  actions.dump_ASCII(file)
+end
+
 M.setup = function(cfg)
   if type(cfg) == "table" then
     M.cfg = vim.tbl_deep_extend("force", M.cfg, cfg)
@@ -117,7 +143,7 @@ M.setup = function(cfg)
     com! -nargs=1 -bang HexSearchBack lua require'hex.actions'.HEX_search('?', <f-args>)
     com! -nargs=0 -bang HexReformat lua require'hex.actions'.reformat_HEX()
     com! -nargs=0 -bang HexOpenAscii lua require'hex'.open_ASCII()
-    com! -nargs=0 -bang HexToggleBin lua require'hex.actions'.toggle_bin()
+    com! -nargs=0 -bang HexToggleBin lua require'hex'.toggle_bin()
 
     hi HexFocus guibg=yellow guifg=black
   ]]

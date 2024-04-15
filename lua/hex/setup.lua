@@ -15,7 +15,7 @@ M.setup_ASCII = function(cfg)
     au BufEnter <buffer> lua require'hex'.on_ASCII_enter()
     au BufLeave <buffer> lua require'hex'.on_ASCII_leave()
     au WinClosed <buffer> lua require'hex.references'.on_ASCII_close()
-    au FileChangedShellPost <buffer> lua require'hex.utils'.bind_scroll_and_cursor()
+    au FileChangedShellPost <buffer> lua require'hex'.on_ASCII_changed_shell()
   ]]
   local buf = vim.api.nvim_get_current_buf()
   local skm = vim.api.nvim_buf_set_keymap
@@ -41,13 +41,13 @@ M.setup_HEX = function(cfg)
     au WinClosed <buffer> lua require'hex.references'.on_HEX_close()
     au BufWritePost <buffer> lua require'hex'.on_HEX_saved()
     au BufWinEnter <buffer> :HexOpenAscii
+    au FileChangedShellPost <buffer> lua require'hex'.on_HEX_changed_shell()
   ]]
 
   local buf = vim.api.nvim_get_current_buf()
   local skm = vim.api.nvim_buf_set_keymap
   skm(buf, 'n', cfg.keymaps.reformat_hex, ':HexReformat<CR>', {})
   skm(buf, 'n', cfg.keymaps.run, ':lua require"hex".run()<CR>', {})
-
 end
 
 return M

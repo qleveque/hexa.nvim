@@ -12,12 +12,11 @@ M.is_binary_file = function(file)
 end
 
 M.bind_scroll_and_cursor = function()
-  vim.api.nvim_command(":set scrollbind cursorbind")
-  vim.api.nvim_command(":syncbind")
+  vim.api.nvim_command(":setl cursorbind scrollbind")
 end
 
 M.unbind_scroll_and_cursor = function()
-  vim.api.nvim_command(":set noscrollbind nocursorbind")
+  vim.api.nvim_command(":setl noscrollbind nocursorbind")
 end
 
 M.int_div = function(dividend, divisor)

@@ -54,13 +54,6 @@ M.reformat_HEX = function()
   dump_HEX(file)
 end
 
-M.toggle_bin = function()
-  refs.toggle_bin()
-  local file = refs.get_current_file()
-  dump_HEX(file)
-  dump_ASCII(file)
-end
-
 local do_in_ASCII = function(f)
   vim.cmd('wincmd h')
   f()
