@@ -1,2 +1,0 @@
-#!/usr/bin/bash
-xxd "$1" | cut -c 52- | sed '1{/|/d}' > "$2"

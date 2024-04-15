@@ -20,13 +20,13 @@ M.setup_ASCII = function(cfg)
   local buf = vim.api.nvim_get_current_buf()
   local skm = vim.api.nvim_buf_set_keymap
   skm(buf, 'n', cfg.keymaps.replace_ascii,
-    ':lua require"hex.utils".replace_in_ASCII()<CR>',
+    ':lua require"hex.actions".replace_in_ASCII()<CR>',
   {})
   skm(buf, 'n', cfg.keymaps.undo_ascii,
-    ':lua require"hex.utils".undo_from_ASCII()<CR>',
+    ':lua require"hex.actions".undo_from_ASCII()<CR>',
   {})
   skm(buf, 'n', cfg.keymaps.redo_ascii,
-    ':lua require"hex.utils".redo_from_ASCII()<CR>',
+    ':lua require"hex.actions".redo_from_ASCII()<CR>',
   {})
   skm(buf, 'n', cfg.keymaps.run, ':lua require"hex".run()<CR>', {})
 end
@@ -37,8 +37,8 @@ M.setup_HEX = function(cfg)
     au CursorMoved,CursorMovedI <buffer> lua require'hex.cursor'.on_HEX_cursor_move()
     au BufEnter <buffer> lua require'hex'.on_HEX_enter()
     au BufLeave <buffer> lua require'hex'.on_HEX_leave()
+    au BufHidden <buffer> lua require'hex'.on_HEX_hidden()
     au WinClosed <buffer> lua require'hex.references'.on_HEX_close()
-    au BufHidden <buffer> lua require'hex.references'.close_ASCII_if_visible()
     au BufWritePost <buffer> lua require'hex'.on_HEX_saved()
     au BufWinEnter <buffer> :HexOpenAscii
   ]]

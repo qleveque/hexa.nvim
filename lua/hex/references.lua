@@ -10,6 +10,18 @@ local file_to_ASCIIbuf = {}
 
 local ASCIIwin = nil
 
+local file_to_binary = {}
+
+M.is_binary = function()
+  local file=M.get_current_file()
+  return file_to_binary[file]
+end
+
+M.toggle_bin = function()
+  local file=M.get_current_file()
+  file_to_binary[file] = not file_to_binary[file]
+end
+
 M.get_current_file = function()
   return to_origin[vim.fn.expand("%:p")]
 end
@@ -32,6 +44,7 @@ M.init = function(file)
   local ASCII_file = vim.fn.tempname().."_"..filename
   file_to_ASCII[file]=ASCII_file
   to_origin[ASCII_file]=file
+  file_to_binary[file] = false
 end
 
 M.set_current_ASCII = function()
@@ -55,6 +68,12 @@ M.close_ASCII_if_visible = function()
     vim.api.nvim_win_close(ASCIIwin, true)
   end
   ASCIIwin = nil
+end
+
+M.resize_ASCII = function()
+  if M.ASCII_is_visible() then
+    vim.api.nvim_win_set_width(ASCIIwin, 20)
+  end
 end
 
 M.already_dumped = function(file)
