@@ -118,6 +118,8 @@ M.setup = function(cfg)
     com! -nargs=0 -bang HexReformat lua require'hex.actions'.reformat_HEX()
     com! -nargs=0 -bang HexOpenAscii lua require'hex'.open_ASCII()
     com! -nargs=0 -bang HexToggleBin lua require'hex.actions'.toggle_bin()
+
+    hi HexFocus guibg=yellow guifg=black
   ]]
 end
 

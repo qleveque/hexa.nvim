@@ -1,96 +1,66 @@
 local refs = require'hex.references'
 local u = require'hex.utils'
 
-file_to_cursor = {}
+file_to_column = {}
 
 M = {}
 
-local HEX_to_ASCII_cursor = function(cursor)
-  if refs.is_binary() then
-    local y = u.int_div(cursor[2], 9)
-    return cursor[1]-1, y, y
-  else
-    local y = 2 * u.int_div(cursor[2], 5)
-    local yc = y
-    if cursor[2]%5 > 1 then
-      yc = yc + 1
-    end
-    return cursor[1]-1, y, yc
-  end
+local HEX_to_ASCII_column = function(col)
+  local l
+  if refs.is_binary() then l = 9 else l = 3 end
+  return u.int_div(col, l)
 end
 
-local ASCII_to_HEX_cursor = function(cursor)
-  if refs.is_binary() then
-    local y = cursor[2] * 9
-    return cursor[1]-1, y, y
-  else
-    local y = u.int_div(cursor[2], 2) * 5
-    local yc = y
-    if cursor[2]%2 == 1 then
-      yc = yc + 2
-    end
-    return cursor[1]-1, y, yc
-  end
+local ASCII_to_HEX_column = function(col)
+  local l
+  if refs.is_binary() then l = 9 else l = 3 end
+  return col * l
 end
 
 local highlight_ASCII_cursor = function(ASCII_buf)
   local cursor = vim.api.nvim_win_get_cursor(0)
-  local x, y, yc = HEX_to_ASCII_cursor(cursor)
-  vim.api.nvim_buf_clear_highlight(ASCII_buf, 2, 0, -1)
+  local c = HEX_to_ASCII_column(cursor[2])
   vim.api.nvim_buf_clear_highlight(ASCII_buf, 3, 0, -1)
-  if refs.is_binary() then
-    vim.api.nvim_buf_add_highlight(ASCII_buf, 3, 'HexFocus', x, y, y+1)
-  else
-    vim.api.nvim_buf_add_highlight(ASCII_buf, 2, 'HexContext', x, y, y+2)
-    vim.api.nvim_buf_add_highlight(ASCII_buf, 3, 'HexFocus', x, yc, yc+1)
-  end
+  vim.api.nvim_buf_add_highlight(ASCII_buf, 3, 'HexFocus', cursor[1] - 1, c, c+1)
 end
 
 local highlight_HEX_cursor = function(HEX_buf)
   local cursor = vim.api.nvim_win_get_cursor(0)
-  local x, y, yc = ASCII_to_HEX_cursor(cursor)
-  vim.api.nvim_buf_clear_highlight(HEX_buf, 2, 0, -1)
+  local c = ASCII_to_HEX_column(cursor[2])
   vim.api.nvim_buf_clear_highlight(HEX_buf, 3, 0, -1)
-  if refs.is_binary() then
-    vim.api.nvim_buf_add_highlight(HEX_buf, 3, 'HexFocus', x, y, y + 8)
-  else
-    vim.api.nvim_buf_add_highlight(HEX_buf, 2, 'HexContext', x, y, y+4)
-    vim.api.nvim_buf_add_highlight(HEX_buf, 3, 'HexFocus', x, yc, yc+2)
-  end
+  local l
+  if refs.is_binary() then l = 8 else l = 2 end
+  vim.api.nvim_buf_add_highlight(HEX_buf, 3, 'HexFocus', cursor[1] - 1, c, c + l)
 end
 
 local move_to_col = function(col)
+  if col == nil then
+    return
+  end
+  vim.cmd('normal! 0')
   if col > 0 then
-    vim.cmd('normal! 0'..col..'l')
-  else
-    vim.cmd('normal! 0')
+    vim.cmd('normal! '..col..'l')
   end
   vim.cmd('syncbind')
 end
 
 M.on_HEX_enter = function(file)
-  local cursor = file_to_cursor[file]
-  if cursor ~= nil then
-    local yc = cursor[2]
-    move_to_col(yc)
-  end
+  move_to_col(file_to_column[file])
 end
 
 M.on_ASCII_enter = function(file)
-  local cursor = file_to_cursor[file]
-  local _, _, yc = HEX_to_ASCII_cursor(cursor)
-  move_to_col(yc)
+  local c = file_to_column[file]
+  move_to_col(HEX_to_ASCII_column(c))
 end
 
 M.on_HEX_leave = function(file)
   local cursor = vim.api.nvim_win_get_cursor(0)
-  file_to_cursor[file] = {cursor[1], cursor[2]}
+  file_to_column[file] = cursor[2]
 end
 
 M.on_ASCII_leave = function(file)
   local cursor = vim.api.nvim_win_get_cursor(0)
-  local x, _, yc = ASCII_to_HEX_cursor(cursor)
-  file_to_cursor[file] = {x, yc}
+  file_to_column[file] = ASCII_to_HEX_column(cursor[2])
 end
 
 M.on_HEX_cursor_move = function()
@@ -104,8 +74,5 @@ M.on_ASCII_cursor_move = function()
   if HEX_buf == nil then return end
   highlight_HEX_cursor(HEX_buf)
 end
-
-vim.cmd("hi HexFocus guibg=yellow guifg=black")
-vim.cmd("hi HexContext guibg=#444e88 guifg=white")
 
 return M

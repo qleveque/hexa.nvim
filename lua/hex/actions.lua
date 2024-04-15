@@ -12,7 +12,7 @@ local dump_HEX = function(file)
     )
   else
     vim.fn.system(
-      'xxd "'..file..'" | cut -c 11-49 > "'..HEX_file..'"'
+      'xxd -g1 "'..file..'" | cut -c 11-57 > "'..HEX_file..'"'
     )
   end
 end
