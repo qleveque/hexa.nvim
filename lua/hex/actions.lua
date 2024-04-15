@@ -4,6 +4,15 @@ setup = require'hex.setup'
 
 M = {}
 
+local dump_LINE = function(file)
+  local LINE_file = refs.get_LINE_file(file)
+  local bin = ""
+  if refs.is_binary() then bin = "-b " end
+  vim.fn.system(
+    'xxd '..bin..'"'..file..'" | cut -c -9 > "'..LINE_file..'"'
+  )
+end
+
 local dump_HEX = function(file)
   local HEX_file = refs.get_HEX_file(file)
   if refs.is_binary() then
@@ -46,6 +55,7 @@ local update = function(file)
 end
 
 M.dump_HEX = dump_HEX
+M.dump_LINE = dump_LINE
 M.dump_ASCII = dump_ASCII
 M.update = update
 

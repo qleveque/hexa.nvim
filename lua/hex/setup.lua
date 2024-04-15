@@ -10,12 +10,11 @@ end
 M.setup_ASCII = function(cfg)
   M.setup_search()
   vim.cmd[[
-    setl nonu ft=hexASCII noma
     au CursorMoved,CursorMovedI <buffer> lua require'hex.cursor'.on_ASCII_cursor_move()
     au BufEnter <buffer> lua require'hex'.on_ASCII_enter()
     au BufLeave <buffer> lua require'hex'.on_ASCII_leave()
     au WinClosed <buffer> lua require'hex.references'.on_ASCII_close()
-    au FileChangedShellPost <buffer> lua require'hex'.on_ASCII_changed_shell()
+    au FileChangedShellPost <buffer> lua require'hex'.on_changed_shell()
   ]]
   local buf = vim.api.nvim_get_current_buf()
   local skm = vim.api.nvim_buf_set_keymap
@@ -31,16 +30,24 @@ M.setup_ASCII = function(cfg)
   skm(buf, 'n', cfg.keymaps.run, ':lua require"hex".run()<CR>', {})
 end
 
+M.setup_LINE = function(cfg)
+  vim.cmd[[
+    au FileChangedShellPost <buffer> lua require'hex'.on_changed_shell()
+    au WinClosed <buffer> lua require'hex.references'.on_LINE_close()
+  ]]
+end
+
 M.setup_HEX = function(cfg)
   M.setup_search()
   vim.cmd[[
+    setl nonu
     au CursorMoved,CursorMovedI <buffer> lua require'hex.cursor'.on_HEX_cursor_move()
     au BufEnter <buffer> lua require'hex'.on_HEX_enter()
     au BufLeave <buffer> lua require'hex'.on_HEX_leave()
     au BufHidden <buffer> lua require'hex'.on_HEX_hidden()
     au WinClosed <buffer> lua require'hex.references'.on_HEX_close()
     au BufWritePost <buffer> lua require'hex'.on_HEX_saved()
-    au BufWinEnter <buffer> :HexOpenAscii
+    au BufWinEnter <buffer> :OpenWindows
     au FileChangedShellPost <buffer> lua require'hex'.on_HEX_changed_shell()
   ]]
 

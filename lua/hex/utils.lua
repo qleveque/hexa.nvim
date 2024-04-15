@@ -11,8 +11,11 @@ M.is_binary_file = function(file)
   return false
 end
 
-M.bind_scroll_and_cursor = function()
+M.bind_scroll_and_cursor = function(sync)
   vim.api.nvim_command(":setl cursorbind scrollbind")
+  if sync then
+    vim.api.nvim_command(":syncbind")
+  end
 end
 
 M.unbind_scroll_and_cursor = function()
