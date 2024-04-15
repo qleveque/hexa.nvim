@@ -10,11 +10,16 @@ end
 M.setup_ASCII = function(cfg)
   M.setup_search()
   vim.cmd[[
+    " cursor
     au CursorMoved,CursorMovedI <buffer> lua require'hex.cursor'.on_ASCII_cursor_move()
-    au BufEnter <buffer> lua require'hex'.on_ASCII_enter()
     au BufLeave <buffer> lua require'hex'.on_ASCII_leave()
-    au WinClosed <buffer> lua require'hex.references'.on_ASCII_close()
+    au BufEnter <buffer> lua require'hex'.on_ASCII_enter()
+
+    " when outside changes finished, sync
     au FileChangedShellPost <buffer> lua require'hex'.on_changed_shell()
+
+    " on closed
+    au WinClosed <buffer> lua require'hex.references'.on_ASCII_closed()
   ]]
   local buf = vim.api.nvim_get_current_buf()
   local skm = vim.api.nvim_buf_set_keymap
@@ -32,8 +37,11 @@ end
 
 M.setup_LINE = function(cfg)
   vim.cmd[[
+    " when outside changes finished, sync
     au FileChangedShellPost <buffer> lua require'hex'.on_changed_shell()
-    au WinClosed <buffer> lua require'hex.references'.on_LINE_close()
+
+    " on closed
+    au WinClosed <buffer> lua require'hex.references'.on_LINE_closed()
   ]]
 end
 
@@ -41,14 +49,22 @@ M.setup_HEX = function(cfg)
   M.setup_search()
   vim.cmd[[
     setl nonu
+
+    " enter
+    au BufEnter <buffer> lua require'hex'.open_wins()
+
+    " cursor
     au CursorMoved,CursorMovedI <buffer> lua require'hex.cursor'.on_HEX_cursor_move()
-    au BufEnter <buffer> lua require'hex'.on_HEX_enter()
     au BufLeave <buffer> lua require'hex'.on_HEX_leave()
+
+    " close other windows when hidden
     au BufHidden <buffer> lua require'hex'.on_HEX_hidden()
+
+    " close other windows instead of HEX
     au WinClosed <buffer> lua require'hex.references'.on_HEX_close()
+
+    " remove scroll when saved
     au BufWritePost <buffer> lua require'hex'.on_HEX_saved()
-    au BufWinEnter <buffer> :OpenWindows
-    au FileChangedShellPost <buffer> lua require'hex'.on_HEX_changed_shell()
   ]]
 
   local buf = vim.api.nvim_get_current_buf()

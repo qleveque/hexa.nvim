@@ -65,12 +65,11 @@ M.reformat_HEX = function()
 end
 
 local do_in_ASCII = function(f)
-  vim.cmd('wincmd h')
+  local win = vim.api.nvim_get_current_win()
+  vim.api.nvim_set_current_win(refs.HEXwin())
   f()
   vim.cmd(':w!')
-  u.bind_scroll_and_cursor()
-  vim.cmd('wincmd l')
-  u.bind_scroll_and_cursor()
+  vim.api.nvim_set_current_win(win)
 end
 
 M.replace_in_ASCII = function()
