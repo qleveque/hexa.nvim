@@ -4,18 +4,10 @@ setup = require'hex.setup'
 
 M = {}
 
-local dump_LINE = function(file)
-  local LINE_file = refs.get_LINE_file(file)
-  local bin = ""
-  if refs.is_binary() then bin = "-b " end
-  vim.fn.system(
-    'xxd '..bin..'"'..file..'" | cut -c -9 > "'..LINE_file..'"'
-  )
-end
-
-local dump_HEX = function(file)
-  local HEX_file = refs.get_HEX_file(file)
-  if refs.is_binary() then
+local dump_HEX = function()
+  local HEX_file = refs.file().hex.file
+  local file = refs.file().origin
+  if refs.file().binary then
     vim.fn.system(
       'xxd -b "'..file..'" | cut -c 11-63 > "'..HEX_file..'"'
     )
@@ -26,9 +18,10 @@ local dump_HEX = function(file)
   end
 end
 
-local dump_ASCII = function(file)
-  local ASCII_file = refs.get_ASCII_file(file)
-  if refs.is_binary() then
+local dump_ASCII = function()
+  local ASCII_file = refs.file().ascii.file
+  local file = refs.file().origin
+  if refs.file().binary then
     vim.fn.system(
       'xxd -b "'..file..'" | cut -c 66- > "'..ASCII_file..'"'
     )
@@ -39,9 +32,20 @@ local dump_ASCII = function(file)
   end
 end
 
-local update = function(file)
-  local HEX_file = refs.get_HEX_file(file)
-  if refs.is_binary() then
+local dump_LINE = function()
+  local LINE_file = refs.file().line.file
+  local file = refs.file().origin
+  local bin = ""
+  if refs.file().binary then bin = "-b " end
+  vim.fn.system(
+    'xxd '..bin..'"'..file..'" | cut -c -9 > "'..LINE_file..'"'
+  )
+end
+
+local update = function()
+  local HEX_file = refs.file().hex.file
+  local file = refs.file().origin
+  if refs.file().binary then
     local current_script = debug.getinfo(1, "S").source:sub(2)
     local current_path = vim.fn.fnamemodify(current_script, ":h")
     local o = HEX_file..".bin"
@@ -59,24 +63,21 @@ M.dump_LINE = dump_LINE
 M.dump_ASCII = dump_ASCII
 M.update = update
 
-M.reformat_HEX = function()
-  local file = refs.get_current_file()
-  dump_HEX(file)
-end
-
-local do_in_ASCII = function(f)
+local do_in_HEX = function(f)
   local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_set_current_win(refs.HEXwin())
+  u.unbind_scroll_and_cursor()
+  vim.cmd('wincmd h')
   f()
   vim.cmd(':w!')
-  vim.api.nvim_set_current_win(win)
+  vim.cmd('wincmd l')
+  u.bind_scroll_and_cursor()
 end
 
 M.replace_in_ASCII = function()
   local f= function()
     local char = vim.fn.nr2char(vim.fn.getchar())
     local byte = string.byte(char)
-    if refs.is_binary() then
+    if refs.file().binary then
       local binary = ""
       for i = 7, 0, -1 do
           binary = binary .. tostring(bit.band(byte, 2^i) > 0 and 1 or 0)
@@ -87,21 +88,21 @@ M.replace_in_ASCII = function()
       vim.cmd('normal! vlc'..hex)
     end
   end
-  do_in_ASCII(f)
+  do_in_HEX(f)
 end
 
 M.undo_from_ASCII = function()
   local f= function()
     vim.cmd(':undo')
   end
-  do_in_ASCII(f)
+  do_in_HEX(f)
 end
 
 M.redo_from_ASCII = function()
   local f= function()
     vim.cmd(':redo')
   end
-  do_in_ASCII(f)
+  do_in_HEX(f)
 end
 
 M.HEX_search = function(char, s)

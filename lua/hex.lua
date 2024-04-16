@@ -21,42 +21,24 @@ M.cfg = {
 }
 
 local set_scroll = function()
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_set_current_win(refs.HEXwin())
-  u.bind_scroll_and_cursor()
+  refs.windows.hex:set_scroll()
   vim.cmd("sync")
-  if refs.LINE_is_visible() then
-    vim.api.nvim_set_current_win(refs.LINEwin())
-    u.bind_scroll_and_cursor()
-  end
-  if refs.ASCII_is_visible() then
-    vim.api.nvim_set_current_win(refs.ASCIIwin())
-    u.bind_scroll_and_cursor()
-  end
-  vim.api.nvim_set_current_win(win)
+  refs.windows.line:set_scroll()
+  refs.windows.ascii:set_scroll()
 end
 
 local unset_scroll = function()
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_set_current_win(refs.HEXwin())
-  u.unbind_scroll_and_cursor()
-  if refs.ASCII_is_visible() then
-    vim.api.nvim_set_current_win(refs.ASCIIwin())
-    u.unbind_scroll_and_cursor()
-  end
-  if refs.LINE_is_visible() then
-    vim.api.nvim_set_current_win(refs.LINEwin())
-    u.unbind_scroll_and_cursor()
-  end
-  vim.api.nvim_set_current_win(win)
+  refs.windows.hex:unset_scroll()
+  refs.windows.line:unset_scroll()
+  refs.windows.ascii:unset_scroll()
 end
 
 local shell_changed = function()
   changed_shell_count = 0
-  if refs.ASCII_is_visible() then
+  if refs.windows.ascii:is_visible() then
     changed_shell_count = changed_shell_count + 1
   end
-  if refs.LINE_is_visible() then
+  if refs.windows.line:is_visible() then
     changed_shell_count = changed_shell_count + 1
   end
 end
@@ -64,86 +46,71 @@ end
 M.on_HEX_saved = function()
   unset_scroll()
   shell_changed()
-  local file=refs.get_current_file()
-  actions.update(file)
-  actions.dump_LINE(file)
-  actions.dump_ASCII(file)
+  actions.update()
+  actions.dump_LINE()
+  actions.dump_ASCII()
 end
 
 M.on_HEX_hidden = function()
   unset_scroll()
-  refs.close_ASCII_if_visible()
-  refs.close_LINE_if_visible()
+  refs.windows.ascii:close_if_visible()
+  refs.windows.line:close_if_visible()
 end
 
 M.open_wins = function(reset)
+  if refs.unknown_dump() then return end
+
   if reset ~= nil and reset == true then
-    refs.reset_show_state()
+    refs.windows.line.show = true
+    refs.windows.ascii.show = true
   end
 
-  local file = refs.get_current_file()
-  if file == nil then return end
-  refs.set_current_HEX(file)
+  refs.file().hex:set_current()
 
-  local new = false
-  if not refs.ASCII_is_visible() and refs.ASCII_should_spawn() then
-    new = true
-    local ASCII_file = refs.get_ASCII_file(file)
+  local any = false
+  if not refs.windows.ascii:is_visible() and refs.windows.ascii.show then
+    any = true
+    local ASCII_file = refs.file().ascii.file
     vim.api.nvim_command(":rightbelow vsplit "..ASCII_file.." | vertical resize 17")
     vim.cmd('setl nonu ft=hexd noma winfixwidth')
-    if refs.ASCII_is_new_buf(file) then
+    if refs.file().ascii:is_new_buf() then
       setup.setup_ASCII(M.cfg)
     end
-    refs.set_current_ASCII()
+    refs.file().ascii:set_current()
     vim.cmd('wincmd h')
   end
 
-  if not refs.LINE_is_visible() and refs.LINE_should_spawn() then
-    new = true
-    local LINE_file = refs.get_LINE_file(file)
+  if not refs.windows.line:is_visible() and refs.windows.line.show then
+    any = true
+    local LINE_file = refs.file().line.file
     vim.api.nvim_command(":vsplit "..LINE_file.." | vertical resize 10")
     vim.cmd('setl nonu ft=hexd noma winfixwidth')
-    if refs.LINE_is_new_buf(file) then
+    if refs.file().line:is_new_buf() then
       setup.setup_LINE(M.cfg)
     end
-    refs.set_current_LINE()
+    refs.file().line:set_current()
     vim.cmd('wincmd l')
   end
   
-  if new then
+  if any then
     set_scroll()
   end
 
-
-  local file = refs.get_current_file()
-  cur.on_HEX_enter(file)
-  local HEX_buf = refs.get_current_hexbuf()
+  cur.on_HEX_enter()
+  local HEX_buf = refs.file().hex.buf
   if HEX_buf == nil then return end
   vim.api.nvim_buf_clear_highlight(HEX_buf, -1, 0, -1)
 end
 
 M.on_ASCII_enter = function()
-  local ASCII_buf = refs.get_current_ASCIIbuf()
+  local ASCII_buf = refs.file().ascii.buf
   if ASCII_buf == nil then return end
   vim.api.nvim_buf_clear_highlight(ASCII_buf, -1, 0, -1)
-  local file = refs.get_current_file()
-  cur.on_ASCII_enter(file)
-  vim.cmd('sync')
-end
-
-M.on_ASCII_leave = function()
-  local file = refs.get_current_file()
-  cur.on_ASCII_leave(file)
-end
-
-M.on_HEX_leave = function()
-  local file = refs.get_current_file()
-  cur.on_HEX_leave(file)
+  cur.on_ASCII_enter()
 end
 
 M.run = function()
-  local file = refs.get_current_file()
-  vim.api.nvim_command(M.cfg.run_cmd(file))
+  vim.api.nvim_command(M.cfg.run_cmd(refs.file().origin))
 end
 
 M.on_changed_shell = function()
@@ -162,35 +129,34 @@ M.on_changed_shell = function()
   end
 end
 
-replace_with_xxd = function(file)
-  local original_buf = vim.api.nvim_get_current_buf()
-  vim.api.nvim_command(':edit '..refs.get_HEX_file(file))
-  refs.set_current_HEX(file)
-  vim.api.nvim_buf_delete(original_buf, { force = true })
-end
-
 M.toggle_bin = function()
   vim.api.nvim_command(":0")
   shell_changed()
   toggled = true
-  refs.toggle_bin()
-  local file = refs.get_current_file()
-  actions.dump_HEX(file)
-  actions.dump_ASCII(file)
-  actions.dump_LINE(file)
+  refs.file().binary = not refs.file().binary
+  actions.dump_HEX()
+  actions.dump_ASCII()
+  actions.dump_LINE()
+end
+
+local replace_with_xxd = function()
+  local original_buf = vim.api.nvim_get_current_buf()
+  vim.api.nvim_command(':edit '..refs.file().hex.file)
+  refs.file().hex:set_current()
+  vim.api.nvim_buf_delete(original_buf, { force = true })
 end
 
 M.on_open = function()
   local file=vim.fn.expand("%:p")
   if u.is_binary_file(file) then
     if refs.already_dumped(file) then
-      replace_with_xxd(file)
+      replace_with_xxd()
     else
       refs.init(file)
-      actions.dump_HEX(file)
-      actions.dump_ASCII(file)
-      actions.dump_LINE(file)
-      replace_with_xxd(file)
+      actions.dump_HEX()
+      actions.dump_ASCII()
+      actions.dump_LINE()
+      replace_with_xxd()
       setup.setup_HEX(M.cfg)
     end
   end
@@ -208,7 +174,7 @@ M.setup = function(cfg)
 
     com! -nargs=1 -bang HexSearch lua require'hex.actions'.HEX_search('/', <f-args>)
     com! -nargs=1 -bang HexSearchBack lua require'hex.actions'.HEX_search('?', <f-args>)
-    com! -nargs=0 -bang HexReformat lua require'hex.actions'.reformat_HEX()
+    com! -nargs=0 -bang HexReformat lua require'hex.actions'.dump_HEX()
     com! -nargs=0 -bang HexShow lua require'hex'.open_wins(true)
     com! -nargs=0 -bang HexToggleBin lua require'hex'.toggle_bin()
 
