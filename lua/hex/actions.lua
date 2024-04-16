@@ -112,4 +112,29 @@ M.HEX_search = function(char, s)
   pcall(vim.api.nvim_command, ':'..char..'\\v' .. pattern_with_space)
 end
 
+M.ASCII_goto = function(s)
+  local n = tonumber(s, 16)
+  local d
+  if refs.file().binary then d = 6 else d = 16 end
+  local line = u.int_div(n, d) + 1
+  local col = n % d
+  vim.cmd(":"..line)
+  u.move_to_col(col)
+end
+
+M.HEX_goto = function(s)
+  local n = tonumber(s, 16)
+  local line
+  local col
+  if refs.file().binary then
+    line = u.int_div(n, 6) + 1
+    col = n % 6 * 9
+  else
+    line = u.int_div(n, 16) + 1
+    col = n % 16 * 3
+  end
+  vim.cmd(":"..line)
+  u.move_to_col(col)
+end
+
 return M

@@ -177,6 +177,7 @@ M.setup = function(cfg)
     com! -nargs=0 -bang HexReformat lua require'hex.actions'.dump_HEX()
     com! -nargs=0 -bang HexShow lua require'hex'.open_wins(true)
     com! -nargs=0 -bang HexToggleBin lua require'hex'.toggle_bin()
+    com! -nargs=0 -bang HexRun lua require'hex'.run()
 
     hi HexFocus guibg=yellow guifg=black
   ]]

@@ -18,6 +18,8 @@ M.setup_ASCII = function(cfg)
     au FileChangedShellPost <buffer> lua require'hex'.on_changed_shell()
     " on closed
     au WinClosed <buffer> lua require'hex.references'.file().ascii:on_closed()
+    " goto
+    com! -nargs=1 -bang -buffer HexGoto lua require'hex.actions'.ASCII_goto(<f-args>)
   ]]
   local buf = vim.api.nvim_get_current_buf()
   local skm = vim.api.nvim_buf_set_keymap
@@ -30,7 +32,7 @@ M.setup_ASCII = function(cfg)
   skm(buf, 'n', cfg.keymaps.redo_ascii,
     ':lua require"hex.actions".redo_from_ASCII()<CR>',
   {})
-  skm(buf, 'n', cfg.keymaps.run, ':lua require"hex".run()<CR>', {})
+  skm(buf, 'n', cfg.keymaps.run, ':HexRun<CR>', {})
 end
 
 M.setup_LINE = function(cfg)
@@ -57,6 +59,8 @@ M.setup_HEX = function(cfg)
     au WinClosed <buffer> lua require'hex.references'.on_HEX_close()
     " remove scroll bind when saved
     au BufWritePost <buffer> lua require'hex'.on_HEX_saved()
+    " goto
+    com! -nargs=1 -bang -buffer HexGoto lua require'hex.actions'.HEX_goto(<f-args>)
   ]]
 
   local buf = vim.api.nvim_get_current_buf()
