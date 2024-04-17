@@ -1,15 +1,15 @@
-# Hex.nvim
+# hexa.nvim
 ![Lua](https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua)
 
 Simple hexadecimal editor for neovim.
 
-![demo](https://github.com/qleveque/Hex.nvim/blob/main/resources/demo.gif?raw=true)
+![demo](https://github.com/qleveque/hexa.nvim/blob/main/resources/demo.gif?raw=true)
 
 ## Installation using lazy.nvim
 
 ```
   return {
-    "qleveque/Hex.nvim",
+    "qleveque/hexa.nvim",
     opts={}
   }
 ```
