@@ -24,15 +24,16 @@ local load = function()
 
   changed_shell_count = 0
 
-  set_scroll = function()
+  set_scroll = function(center)
     local line = vim.api.nvim_win_get_cursor(0)[1]
-    refs.windows.hex:sync_scroll(line)
-    refs.windows.address:sync_scroll(line)
-    refs.windows.ascii:sync_scroll(line)
-    vim.cmd("sync")
+    if center then vim.cmd("sync") end
+    refs.windows.hex:sync_scroll(line, center)
+    refs.windows.address:sync_scroll(line, center)
+    refs.windows.ascii:sync_scroll(line, center)
     refs.windows.hex:set_scroll()
     refs.windows.address:set_scroll()
     refs.windows.ascii:set_scroll()
+    if not center then vim.cmd("sync") end
   end
 
   unset_scroll = function()
@@ -101,7 +102,7 @@ local load = function()
     end
 
     if any then
-      set_scroll()
+      set_scroll(true)
     end
   end
 
@@ -115,7 +116,7 @@ local load = function()
     end
     changed_shell_count = changed_shell_count - 1
     if changed_shell_count == 0 then
-      set_scroll()
+      set_scroll(false)
     end
   end
 

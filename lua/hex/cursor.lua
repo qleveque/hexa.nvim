@@ -43,10 +43,14 @@ local highlight_ADDRESS_cursor = function(ASCII_buf)
   highlight(refs.file().address, -1)
 end
 
-M.on_leave = function()
+M.highlight = function()
   highlight_ASCII_cursor()
   highlight_ADDRESS_cursor()
   highlight_HEX_cursor()
+end
+
+M.on_leave = function()
+  M.highlight()
   cursor_setup = false
 end
 

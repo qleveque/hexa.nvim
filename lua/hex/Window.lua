@@ -36,13 +36,15 @@ function Window:set_scroll()
   end
 end
 
-function Window:sync_scroll(line)
+function Window:sync_scroll(line, center)
   if self:is_visible() then
     local win = vim.api.nvim_get_current_win()
     self:focus()
     local cursor = vim.api.nvim_win_get_cursor(0)
     vim.api.nvim_win_set_cursor(0, {line, cursor[2]})
-    vim.cmd('normal! zz')
+    if center == true then
+      vim.cmd('normal! zz')
+    end
     vim.api.nvim_set_current_win(win)
   end
 end
