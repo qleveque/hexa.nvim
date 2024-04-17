@@ -70,35 +70,34 @@ local load = function()
       refs.windows.ascii.show = true
     end
 
-    refs.windows.hex:focus()
-    refs.file().hex:set_current()
-    local hex_win = refs.windows.hex
+    f = refs.file()
+    if f.hex.win.win ~= refs.windows.hex.win then return end
 
     if not refs.windows.address:is_visible() and refs.windows.address.show then
       any = true
-      local ADDRESS_file = refs.file().address.file
+      local ADDRESS_file = f.address.file
       vim.api.nvim_command(":vsplit "..ADDRESS_file.." | vertical resize 10")
       vim.cmd('setl nonu ft=hexd noma winfixwidth stl=_')
-      if refs.file().address:is_new_buf() then
+      if f.address:is_new_buf() then
         setup.setup_ADDRESS(M.cfg)
       end
-      refs.file().address:set_current()
-      hex_win:focus()
+      f.address:set_current()
+      refs.windows.hex:focus()
     end
 
     local any = false
     if not refs.windows.ascii:is_visible() and refs.windows.ascii.show then
       any = true
-      local ASCII_file = refs.file().ascii.file
+      local ASCII_file = f.ascii.file
       local right = 'rightbelow '
       if M.cfg.ascii_left then right = '' end
       vim.api.nvim_command(":"..right.."vsplit "..ASCII_file.." | vertical resize 17")
       vim.cmd('setl nonu ft=hexd noma winfixwidth stl=_')
-      if refs.file().ascii:is_new_buf() then
+      if f.ascii:is_new_buf() then
         setup.setup_ASCII(M.cfg)
       end
-      refs.file().ascii:set_current()
-      hex_win:focus()
+      f.ascii:set_current()
+      refs.windows.hex:focus()
     end
 
     if any then
@@ -174,6 +173,7 @@ M.on_open = function()
       actions.dump_ASCII()
       actions.dump_ADDRESS()
       replace_with_xxd()
+      refs.file().hex:set_current()
       setup.setup_HEX(M.cfg)
     end
   end

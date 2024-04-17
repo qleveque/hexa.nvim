@@ -26,7 +26,9 @@ local highlight = function(file, length)
   else
     z = file.col + length
   end
-  vim.api.nvim_buf_add_highlight(file.buf, 3, 'HexFocus', x, y, z)
+  if file.buf ~= nil then
+    vim.api.nvim_buf_add_highlight(file.buf, 3, 'HexFocus', x, y, z)
+  end
 end
 
 local highlight_ASCII_cursor = function(ASCII_buf)
@@ -70,7 +72,9 @@ end
 local clear_highlights = function()
   local f = refs.file()
   for _, file in ipairs({f.hex, f.ascii, f.address}) do
-    vim.api.nvim_buf_clear_highlight(file.buf, 3, 0, -1)
+    if file.buf ~= nil then
+      vim.api.nvim_buf_clear_highlight(file.buf, 3, 0, -1)
+    end
   end
 end
 
