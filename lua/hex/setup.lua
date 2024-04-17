@@ -12,8 +12,7 @@ M.setup_ASCII = function(cfg)
   vim.cmd[[
     " cursor
     au CursorMoved,CursorMovedI <buffer> lua require'hex.cursor'.on_ASCII_cursor_move()
-    au BufLeave <buffer> lua require'hex.cursor'.on_ASCII_leave()
-    au BufEnter <buffer> lua require'hex'.on_ASCII_enter()
+    au BufLeave <buffer> lua require'hex.cursor'.on_leave()
     " when outside changes finished, sync
     au FileChangedShellPost <buffer> lua require'hex'.on_changed_shell()
     " on closed
@@ -23,24 +22,27 @@ M.setup_ASCII = function(cfg)
   ]]
   local buf = vim.api.nvim_get_current_buf()
   local skm = vim.api.nvim_buf_set_keymap
-  skm(buf, 'n', cfg.keymaps.replace_ascii,
+  skm(buf, 'n', cfg.keymaps.ascii.replace,
     ':lua require"hex.actions".replace_in_ASCII()<CR>',
   {})
-  skm(buf, 'n', cfg.keymaps.undo_ascii,
+  skm(buf, 'n', cfg.keymaps.ascii.undo,
     ':lua require"hex.actions".undo_from_ASCII()<CR>',
   {})
-  skm(buf, 'n', cfg.keymaps.redo_ascii,
+  skm(buf, 'n', cfg.keymaps.ascii.redo,
     ':lua require"hex.actions".redo_from_ASCII()<CR>',
   {})
   skm(buf, 'n', cfg.keymaps.run, ':HexRun<CR>', {})
 end
 
-M.setup_LINE = function(cfg)
+M.setup_ADDRESS = function(cfg)
   vim.cmd[[
+    " cursor
+    au CursorMoved,CursorMovedI <buffer> lua require'hex.cursor'.on_ADDRESS_cursor_move()
+    au BufLeave <buffer> lua require'hex.cursor'.on_leave()
     " when outside changes finished, sync
     au FileChangedShellPost <buffer> lua require'hex'.on_changed_shell()
     " on closed
-    au WinClosed <buffer> lua require'hex.references'.file().line:on_closed()
+    au WinClosed <buffer> lua require'hex.references'.file().address:on_closed()
   ]]
 end
 
@@ -52,7 +54,7 @@ M.setup_HEX = function(cfg)
     au BufEnter <buffer> lua require'hex'.open_wins()
     " cursor
     au CursorMoved,CursorMovedI <buffer> lua require'hex.cursor'.on_HEX_cursor_move()
-    au BufLeave <buffer> lua require'hex.cursor'.on_HEX_leave()
+    au BufLeave <buffer> lua require'hex.cursor'.on_leave()
     " close other windows when hidden
     au BufHidden <buffer> lua require'hex'.on_HEX_hidden()
     " close other windows instead of HEX
@@ -65,7 +67,7 @@ M.setup_HEX = function(cfg)
 
   local buf = vim.api.nvim_get_current_buf()
   local skm = vim.api.nvim_buf_set_keymap
-  skm(buf, 'n', cfg.keymaps.reformat_hex, ':HexReformat<CR>', {})
+  skm(buf, 'n', cfg.keymaps.hex.reformat, ':HexReformat<CR>', {})
   skm(buf, 'n', cfg.keymaps.run, ':lua require"hex".run()<CR>', {})
 end
 

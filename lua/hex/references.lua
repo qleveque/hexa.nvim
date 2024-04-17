@@ -21,7 +21,7 @@ file = function()
 end
 M.file = file
 
-M.windows = {hex=Window:new(),ascii=Window:new(),line=Window:new()}
+M.windows = {hex=Window:new(),ascii=Window:new(),address=Window:new()}
 
 M.init = function(file)
   local filename=vim.fn.fnamemodify(file, ":t")
@@ -31,7 +31,7 @@ M.init = function(file)
 
   F.hex = File:new(file, M.windows.hex, to_origin)
   F.ascii = File:new(file, M.windows.ascii, to_origin)
-  F.line = File:new(file, M.windows.line, to_origin)
+  F.address = File:new(file, M.windows.address, to_origin)
   F.binary = false
   F.origin = file
 
@@ -39,13 +39,13 @@ M.init = function(file)
 end
 
 M.on_HEX_close = function()
-  if M.windows.ascii:is_visible() or M.windows.line:is_visible() then
+  if M.windows.ascii:is_visible() or M.windows.address:is_visible() then
     vim.api.nvim_command(":vsplit")
   end
   M.windows.ascii:close_if_visible()
-  M.windows.line:close_if_visible()
+  M.windows.address:close_if_visible()
   file().hex:set_current()
-  M.windows.line.show = false
+  M.windows.address.show = false
   M.windows.ascii.show = false
 end
 

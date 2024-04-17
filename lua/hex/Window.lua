@@ -12,7 +12,7 @@ function Window:new()
   return newObj
 end
 
-function Window:set_current()
+function Window:focus()
   vim.api.nvim_set_current_win(self.win)
 end
 
@@ -30,8 +30,19 @@ end
 function Window:set_scroll()
   if self:is_visible() then
     local win = vim.api.nvim_get_current_win()
-    self:set_current()
-    u.bind_scroll_and_cursor()
+    self:focus()
+    vim.api.nvim_command(":setl cursorbind scrollbind")
+    vim.api.nvim_set_current_win(win)
+  end
+end
+
+function Window:sync_scroll(line)
+  if self:is_visible() then
+    local win = vim.api.nvim_get_current_win()
+    self:focus()
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    vim.api.nvim_win_set_cursor(0, {line, cursor[2]})
+    vim.cmd('normal! zz')
     vim.api.nvim_set_current_win(win)
   end
 end
@@ -39,8 +50,8 @@ end
 function Window:unset_scroll()
   if self:is_visible() then
     local win = vim.api.nvim_get_current_win()
-    self:set_current()
-    u.unbind_scroll_and_cursor()
+    self:focus()
+    vim.api.nvim_command(":setl nocursorbind noscrollbind")
     vim.api.nvim_set_current_win(win)
   end
 end

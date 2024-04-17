@@ -1,78 +1,107 @@
 local refs = require'hex.references'
 local u = require'hex.utils'
 
-file_to_column = {}
-file_was_ascii = {}
+local cursor_setup = false
 
 M = {}
 
-local HEX_to_ASCII_column = function(col)
+local to_ASCII_column = function(col)
   local l
   if refs.file().binary then l = 9 else l = 3 end
   return u.int_div(col, l)
 end
 
-local ASCII_to_HEX_column = function(col)
+local from_ASCII_column = function(col)
   local l
   if refs.file().binary then l = 9 else l = 3 end
   return col * l
 end
 
+local highlight = function(file, length)
+  local x = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local y = file.col
+  local z
+  if length == -1 then
+    z = -1
+  else
+    z = file.col + length
+  end
+  vim.api.nvim_buf_add_highlight(file.buf, 3, 'HexFocus', x, y, z)
+end
+
 local highlight_ASCII_cursor = function(ASCII_buf)
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local c = HEX_to_ASCII_column(cursor[2])
-  vim.api.nvim_buf_clear_highlight(ASCII_buf, 3, 0, -1)
-  vim.api.nvim_buf_add_highlight(ASCII_buf, 3, 'HexFocus', cursor[1] - 1, c, c+1)
+  highlight(refs.file().ascii, 1)
 end
 
-local highlight_HEX_cursor = function(HEX_buf)
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local c = ASCII_to_HEX_column(cursor[2])
-  vim.api.nvim_buf_clear_highlight(HEX_buf, 3, 0, -1)
-  local l
-  if refs.file().binary then l = 8 else l = 2 end
-  vim.api.nvim_buf_add_highlight(HEX_buf, 3, 'HexFocus', cursor[1] - 1, c, c + l)
+local highlight_HEX_cursor = function(ASCII_buf)
+  local length
+  if refs.file().binary then length = 8 else length = 2 end
+  highlight(refs.file().hex, length)
 end
 
-M.on_HEX_enter = function()
-  local origin = refs.file().origin
-  if file_was_ascii[origin] then
-    u.move_to_col(file_to_column[origin])
+local highlight_ADDRESS_cursor = function(ASCII_buf)
+  highlight(refs.file().address, -1)
+end
+
+M.on_leave = function()
+  highlight_ASCII_cursor()
+  highlight_ADDRESS_cursor()
+  highlight_HEX_cursor()
+  cursor_setup = false
+end
+
+local update_cols = function(col)
+  local f = refs.file()
+  if f.ascii ~= nil then
+    f.ascii.col = to_ASCII_column(col)
+  end
+  if f.hex ~= nil then
+    f.hex.col = col
+  end
+  if f.address ~= nil then
+    f.address.col = 0
   end
 end
 
-M.on_ASCII_enter = function()
-  local origin = refs.file().origin
-  if not file_was_ascii[origin] then
-    local c = file_to_column[origin]
-    u.move_to_col(HEX_to_ASCII_column(c))
+local clear_highlights = function()
+  local f = refs.file()
+  for _, file in ipairs({f.hex, f.ascii, f.address}) do
+    vim.api.nvim_buf_clear_highlight(file.buf, 3, 0, -1)
   end
-end
-
-M.on_HEX_leave = function()
-  local origin = refs.file().origin
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  file_to_column[origin] = cursor[2]
-  file_was_ascii[origin] = false
-end
-
-M.on_ASCII_leave = function()
-  local origin = refs.file().origin
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  file_to_column[origin] = ASCII_to_HEX_column(cursor[2])
-  file_was_ascii[origin] = true
 end
 
 M.on_HEX_cursor_move = function()
-  local ASCII_buf = refs.file().ascii.buf
-  if ASCII_buf == nil then return end
-  highlight_ASCII_cursor(ASCII_buf)
+  if not cursor_setup then
+    u.move_to_col(refs.file().hex.col)
+    cursor_setup = true
+  end
+  local c = vim.api.nvim_win_get_cursor(0)[2]
+  update_cols(c)
+  clear_highlights()
+  highlight_ASCII_cursor()
+  highlight_ADDRESS_cursor()
 end
 
 M.on_ASCII_cursor_move = function()
-  local HEX_buf = refs.file().hex.buf
-  if HEX_buf == nil then return end
-  highlight_HEX_cursor(HEX_buf)
+  if not cursor_setup then
+    u.move_to_col(refs.file().ascii.col)
+    cursor_setup = true
+  end
+  local c = vim.api.nvim_win_get_cursor(0)[2]
+  update_cols(from_ASCII_column(c))
+  clear_highlights()
+  highlight_HEX_cursor()
+  highlight_ADDRESS_cursor()
+end
+
+M.on_ADDRESS_cursor_move = function()
+  if not cursor_setup then
+    u.move_to_col(refs.file().address.col)
+    cursor_setup = true
+  end
+  clear_highlights()
+  highlight_HEX_cursor()
+  highlight_ASCII_cursor()
 end
 
 return M

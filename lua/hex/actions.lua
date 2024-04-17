@@ -4,7 +4,7 @@ setup = require'hex.setup'
 
 M = {}
 
-local dump_HEX = function()
+M.dump_HEX = function()
   local HEX_file = refs.file().hex.file
   local file = refs.file().origin
   if refs.file().binary then
@@ -18,7 +18,7 @@ local dump_HEX = function()
   end
 end
 
-local dump_ASCII = function()
+M.dump_ASCII = function()
   local ASCII_file = refs.file().ascii.file
   local file = refs.file().origin
   if refs.file().binary then
@@ -32,17 +32,17 @@ local dump_ASCII = function()
   end
 end
 
-local dump_LINE = function()
-  local LINE_file = refs.file().line.file
+M.dump_ADDRESS = function()
+  local ADDRESS_file = refs.file().address.file
   local file = refs.file().origin
   local bin = ""
   if refs.file().binary then bin = "-b " end
   vim.fn.system(
-    'xxd '..bin..'"'..file..'" | cut -c -9 > "'..LINE_file..'"'
+    'xxd '..bin..'"'..file..'" | cut -c -9 > "'..ADDRESS_file..'"'
   )
 end
 
-local update = function()
+M.update = function()
   local HEX_file = refs.file().hex.file
   local file = refs.file().origin
   if refs.file().binary then
@@ -58,19 +58,12 @@ local update = function()
   end
 end
 
-M.dump_HEX = dump_HEX
-M.dump_LINE = dump_LINE
-M.dump_ASCII = dump_ASCII
-M.update = update
-
 local do_in_HEX = function(f)
   local win = vim.api.nvim_get_current_win()
-  u.unbind_scroll_and_cursor()
-  vim.cmd('wincmd h')
+  refs.windows.hex:focus()
   f()
   vim.cmd(':w!')
-  vim.cmd('wincmd l')
-  u.bind_scroll_and_cursor()
+  refs.windows.ascii:focus()
 end
 
 M.replace_in_ASCII = function()

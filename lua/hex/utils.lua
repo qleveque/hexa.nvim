@@ -1,13 +1,5 @@
 local M = {}
 
-M.bind_scroll_and_cursor = function()
-  vim.api.nvim_command(":setl cursorbind scrollbind")
-end
-
-M.unbind_scroll_and_cursor = function()
-  vim.api.nvim_command(":setl noscrollbind nocursorbind")
-end
-
 M.int_div = function(dividend, divisor)
   return (dividend - (dividend % divisor)) / divisor
 end

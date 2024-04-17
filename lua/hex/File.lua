@@ -8,7 +8,8 @@ function File:new(origin, win, to_origin)
     file = file,
     origin = origin,
     buf = nil,
-    win = win
+    win = win,
+    col = 0,
   }
   setmetatable(newObj, self)
   self.__index = self
