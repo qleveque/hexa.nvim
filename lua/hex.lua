@@ -160,6 +160,14 @@ local file_is_binary = function(file)
   return string.find(content, "%z")
 end
 
+-- prevent address window focus on vim enter
+M.on_vim_enter = function()
+  if loaded then
+    refs.file().hex.win:focus()
+    cur.highlight()
+  end
+end
+
 M.on_open = function()
   local file=vim.fn.expand("%:p")
   if file_is_binary(file) then
@@ -187,6 +195,7 @@ M.setup = function(cfg)
       autocmd!
       autocmd BufReadPost * lua require'hex'.on_open()
     augroup END
+    au VimEnter * lua require'hex'.on_vim_enter()
   ]]
 end
 
