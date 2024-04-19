@@ -4,7 +4,7 @@ local Window = {}
 
 function Window:new()
   local newObj = {
-    win = nil,
+    winnr = nil,
     show = true
   }
   setmetatable(newObj, self)
@@ -12,50 +12,55 @@ function Window:new()
   return newObj
 end
 
-function Window:focus()
-  vim.api.nvim_set_current_win(self.win)
+function Window:is_visible()
+  return self.winnr ~= nil and vim.api.nvim_win_is_valid(self.winnr)
 end
 
-function Window:is_visible()
-  return self.win ~= nil and vim.api.nvim_win_is_valid(self.win)
+function Window:focus()
+  vim.api.nvim_set_current_win(self.winnr)
 end
 
 function Window:close_if_visible()
   if self:is_visible() then
-    vim.api.nvim_win_close(self.win, true)
+    vim.api.nvim_win_close(self.winnr, true)
   end
-  self.win = nil
+  self.winnr = nil
 end
 
 function Window:set_scroll()
   if self:is_visible() then
-    local win = vim.api.nvim_get_current_win()
+    local winnr = vim.api.nvim_get_current_win()
     self:focus()
     vim.api.nvim_command(":setl cursorbind scrollbind")
-    vim.api.nvim_set_current_win(win)
+    vim.api.nvim_set_current_win(winnr)
   end
 end
 
 function Window:sync_scroll(line, center)
   if self:is_visible() then
-    local win = vim.api.nvim_get_current_win()
+    local winnr = vim.api.nvim_get_current_win()
     self:focus()
     local cursor = vim.api.nvim_win_get_cursor(0)
     vim.api.nvim_win_set_cursor(0, {line, cursor[2]})
     if center == true then
       vim.cmd('normal! zz')
     end
-    vim.api.nvim_set_current_win(win)
+    vim.api.nvim_set_current_win(winnr)
   end
 end
 
 function Window:unset_scroll()
   if self:is_visible() then
-    local win = vim.api.nvim_get_current_win()
+    local winnr = vim.api.nvim_get_current_win()
     self:focus()
     vim.api.nvim_command(":setl nocursorbind noscrollbind")
-    vim.api.nvim_set_current_win(win)
+    vim.api.nvim_set_current_win(winnr)
   end
+end
+
+function Window:on_closed()
+  self.show = false
+  self.winnr = nil
 end
 
 return Window

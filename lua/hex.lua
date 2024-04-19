@@ -25,26 +25,28 @@ local load = function()
   changed_shell_count = 0
 
   set_scroll = function(center)
+    local f = refs.file()
     local line = vim.api.nvim_win_get_cursor(0)[1]
     if center then vim.cmd("sync") end
-    refs.windows.hex:sync_scroll(line, center)
-    refs.windows.address:sync_scroll(line, center)
-    refs.windows.ascii:sync_scroll(line, center)
-    refs.windows.hex:set_scroll()
-    refs.windows.address:set_scroll()
-    refs.windows.ascii:set_scroll()
+    f.hex.win:sync_scroll(line, center)
+    f.address.win:sync_scroll(line, center)
+    f.ascii.win:sync_scroll(line, center)
+    f.hex.win:set_scroll()
+    f.address.win:set_scroll()
+    f.ascii.win:set_scroll()
     if not center then vim.cmd("sync") end
   end
 
   unset_scroll = function()
-    refs.windows.hex:unset_scroll()
-    refs.windows.address:unset_scroll()
-    refs.windows.ascii:unset_scroll()
+    local f = refs.file()
+    f.hex.win:unset_scroll()
+    f.address.win:unset_scroll()
+    f.ascii.win:unset_scroll()
     changed_shell_count = 0
-    if refs.windows.ascii:is_visible() then
+    if f.ascii.win:is_visible() then
       changed_shell_count = changed_shell_count + 1
     end
-    if refs.windows.address:is_visible() then
+    if f.address.win:is_visible() then
       changed_shell_count = changed_shell_count + 1
     end
   end
@@ -57,47 +59,49 @@ local load = function()
   end
 
   M.on_HEX_hidden = function()
+    local f = refs.file()
     unset_scroll()
-    refs.windows.ascii:close_if_visible()
-    refs.windows.address:close_if_visible()
+    f.ascii.win:close_if_visible()
+    f.address.win:close_if_visible()
   end
 
   M.open_wins = function(reset)
     if refs.unknown_dump() then return end
 
-    if reset ~= nil and reset == true then
-      refs.windows.address.show = true
-      refs.windows.ascii.show = true
+    local f = refs.file()
+    if f.hex.win.winnr ~= vim.api.nvim_get_current_win() then
+      f.hex:set_current()
     end
 
-    f = refs.file()
-    if f.hex.win.win ~= refs.windows.hex.win then return end
+    if reset ~= nil and reset == true then
+      f.address.win.show = true
+      f.ascii.win.show = true
+    end
 
-    if not refs.windows.address:is_visible() and refs.windows.address.show then
+    local any = false
+
+    if f.address.win.show and f.address.win.winnr == nil then
       any = true
-      local ADDRESS_file = f.address.file
-      vim.api.nvim_command(":vsplit "..ADDRESS_file.." | vertical resize 10")
-      vim.cmd('setl nonu ft=hexd noma winfixwidth stl=_')
+      vim.api.nvim_command(":vsplit "..f.address.file.." | vertical resize 10")
+      vim.cmd('setl nonu ft=hexd noma winfixwidth stl=\\ ')
       if f.address:is_new_buf() then
         setup.setup_ADDRESS(M.cfg)
       end
       f.address:set_current()
-      refs.windows.hex:focus()
+      f.hex.win:focus()
     end
 
-    local any = false
-    if not refs.windows.ascii:is_visible() and refs.windows.ascii.show then
+    if f.ascii.win.show and f.ascii.win.winnr == nil then
       any = true
-      local ASCII_file = f.ascii.file
       local right = 'rightbelow '
       if M.cfg.ascii_left then right = '' end
-      vim.api.nvim_command(":"..right.."vsplit "..ASCII_file.." | vertical resize 17")
-      vim.cmd('setl nonu ft=hexd noma winfixwidth stl=_')
+      vim.api.nvim_command(":"..right.."vsplit "..f.ascii.file.." | vertical resize 17")
+      vim.cmd('setl nonu ft=hexd noma winfixwidth stl=\\ ')
       if f.ascii:is_new_buf() then
         setup.setup_ASCII(M.cfg)
       end
       f.ascii:set_current()
-      refs.windows.hex:focus()
+      f.hex.win:focus()
     end
 
     if any then
@@ -130,13 +134,12 @@ local load = function()
   replace_with_xxd = function()
     local original_buf = vim.api.nvim_get_current_buf()
     vim.api.nvim_command(':edit '..refs.file().hex.file)
-    refs.file().hex:set_current()
     vim.api.nvim_buf_delete(original_buf, { force = true })
   end
 
   vim.cmd[[
-    com! -nargs=1 -bang HexSearch lua require'hex.actions'.HEX_search('/', <f-args>)
-    com! -nargs=1 -bang HexSearchBack lua require'hex.actions'.HEX_search('?', <f-args>)
+    com! -nargs=1 -bang HexSearch lua require'hex.actions'.search('/', <f-args>)
+    com! -nargs=1 -bang HexSearchBack lua require'hex.actions'.search('?', <f-args>)
     com! -nargs=0 -bang HexReformat lua require'hex.actions'.dump_HEX()
     com! -nargs=0 -bang HexShow lua require'hex'.open_wins(true)
     com! -nargs=0 -bang HexToggleBin lua require'hex'.toggle_bin()
@@ -173,9 +176,8 @@ M.on_open = function()
       actions.dump_ASCII()
       actions.dump_ADDRESS()
       replace_with_xxd()
-      refs.file().hex:set_current()
-      setup.setup_HEX(M.cfg)
     end
+    setup.setup_HEX(M.cfg)
   end
 end
 

@@ -58,12 +58,13 @@ M.update = function()
   end
 end
 
-local do_in_HEX = function(f)
+local do_in_HEX = function(fun)
   local win = vim.api.nvim_get_current_win()
-  refs.windows.hex:focus()
-  f()
+  local f = refs.file()
+  f.hex.win:focus()
+  fun()
   vim.cmd(':w!')
-  refs.windows.ascii:focus()
+  f.ascii.win:focus()
 end
 
 M.replace_in_ASCII = function()
@@ -98,10 +99,10 @@ M.redo_from_ASCII = function()
   do_in_HEX(f)
 end
 
-M.HEX_search = function(char, s)
+M.search = function(char, s)
   local chars = {}
-  for char in s:gmatch(".") do table.insert(chars, char) end
-  local pattern_with_space = table.concat(chars, '[\\s\\n]*') 
+  for c in s:gmatch(".") do table.insert(chars, c) end
+  local pattern_with_space = table.concat(chars, '[ \\n]*') 
   pcall(vim.api.nvim_command, ':'..char..'\\v' .. pattern_with_space)
 end
 
