@@ -151,32 +151,29 @@ end
 
 loaded = false
 
-local is_binary_file = function(file)
-  if string.sub(file, 1, 5) == '/tmp/' then return false end
-  if vim.bo.ft ~= "" then return false end
-  if vim.bo.bin then return true end
-  local ext = vim.fn.fnamemodify(file, ":e")
-  binary_ext = { 'out', 'bin', 'png', 'exe', 'dll' }
-  if vim.tbl_contains(binary_ext, ext) then return true end
-  return false
+local file_is_binary = function(file)
+  local f = io.open(file, "rb")
+  if not f then return false end
+  local content = f:read(10)
+  f:close()
+  if not content then return false end
+  return string.find(content, "%z")
 end
 
 M.on_open = function()
   local file=vim.fn.expand("%:p")
-  if is_binary_file(file) then
+  if file_is_binary(file) then
     if not loaded then
       load()
       loaded = true
     end
-    if refs.already_dumped(file) then
-      replace_with_xxd()
-    else
+    if not refs.already_dumped(file) then
       refs.init(file)
       actions.dump_HEX()
       actions.dump_ASCII()
       actions.dump_ADDRESS()
-      replace_with_xxd()
     end
+    replace_with_xxd()
     setup.setup_HEX(M.cfg)
   end
 end

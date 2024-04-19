@@ -39,13 +39,11 @@ M.on_HEX_close = function()
   if f.hex.win.winnr ~= vim.api.nvim_get_current_win() then
     return
   end
-  if f.ascii.win:is_visible() or f.address.win:is_visible() then
-    vim.api.nvim_command(":vsplit")
-  end
   f.ascii.win:close_if_visible()
   f.address.win:close_if_visible()
-  f.ascii.win.show = false
-  f.address.win.show = false
+  if #vim.api.nvim_list_wins() == 1 then
+    vim.api.nvim_command('q')
+  end
 end
 
 return M
