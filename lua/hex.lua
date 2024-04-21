@@ -17,6 +17,8 @@ M.cfg = {
 }
 
 local load = function()
+  if loaded then return end
+  loaded = true
   refs = require("hex.references")
   actions = require("hex.actions")
   setup = require("hex.setup")
@@ -49,6 +51,21 @@ local load = function()
     if f.address.win:is_visible() then
       changed_shell_count = changed_shell_count + 1
     end
+  end
+
+  open_binary = function()
+    local file=vim.fn.expand("%:p")
+    refs.init(file)
+    actions.dump_HEX()
+    actions.dump_ASCII()
+    actions.dump_ADDRESS()
+    replace_with_xxd()
+    setup.setup_HEX(M.cfg)
+  end
+
+  should_open_as_bin = function()
+    local f = refs.file()
+    return f == nil or f.open_as_bin
   end
 
   M.on_HEX_saved = function()
@@ -131,6 +148,16 @@ local load = function()
     actions.dump_ADDRESS()
   end
 
+  M.unhex = function()
+    local original_buf = vim.api.nvim_get_current_buf()
+    local f = refs.file()
+    if vim.fn.expand("%:p") ~= f.hex.file then return end
+    f.hex.buf = nil
+    f.open_as_bin = false
+    vim.api.nvim_command(':edit '..f.origin)
+    vim.api.nvim_buf_delete(original_buf, { force = true })
+  end
+
   replace_with_xxd = function()
     local original_buf = vim.api.nvim_get_current_buf()
     vim.api.nvim_command(':edit '..refs.file().hex.file)
@@ -144,12 +171,32 @@ local load = function()
     com! -nargs=0 -bang HexShow lua require'hex'.open_wins(true)
     com! -nargs=0 -bang HexToggleBin lua require'hex'.toggle_bin()
     com! -nargs=0 -bang HexRun lua require'hex'.run()
+    com! -nargs=0 -bang UnHex lua require'hex'.unhex()
 
     hi HexFocus guibg=yellow guifg=black
   ]]
 end
 
 loaded = false
+
+-- prevent address window focus on vim enter
+M.on_vim_enter = function()
+  if loaded then
+    refs.file().hex.win:focus()
+    cur.highlight()
+  end
+end
+
+M.open_as_binary = function()
+  load()
+  local f = refs.file()
+  if f ~= nil and vim.fn.expand("%:p") ~= f.origin then
+    return
+  end
+  open_binary()
+  refs.file().open_as_bin = true
+  M.open_wins()
+end
 
 local file_is_binary = function(file)
   local f = io.open(file, "rb")
@@ -160,29 +207,12 @@ local file_is_binary = function(file)
   return string.find(content, "%z")
 end
 
--- prevent address window focus on vim enter
-M.on_vim_enter = function()
-  if loaded then
-    refs.file().hex.win:focus()
-    cur.highlight()
-  end
-end
-
 M.on_open = function()
-  local file=vim.fn.expand("%:p")
-  if file_is_binary(file) then
-    if not loaded then
-      load()
-      loaded = true
+  if file_is_binary(vim.fn.expand("%:p")) then
+    load()
+    if should_open_as_bin() then
+      open_binary()
     end
-    if not refs.already_dumped(file) then
-      refs.init(file)
-      actions.dump_HEX()
-      actions.dump_ASCII()
-      actions.dump_ADDRESS()
-    end
-    replace_with_xxd()
-    setup.setup_HEX(M.cfg)
   end
 end
 
@@ -196,6 +226,7 @@ M.setup = function(cfg)
       autocmd BufReadPost * lua require'hex'.on_open()
     augroup END
     au VimEnter * lua require'hex'.on_vim_enter()
+    com! -nargs=0 -bang Hex lua require'hex'.open_as_binary()
   ]]
 end
 

@@ -20,6 +20,7 @@ M.file = function()
 end
 
 M.init = function(file)
+  if files[file] ~= nil then return end
   local filename=vim.fn.fnamemodify(file, ":t")
 
   files[file] = {}
@@ -30,6 +31,7 @@ M.init = function(file)
   F.address = File:new(file, to_origin)
   F.binary = false
   F.origin = file
+  F.open_as_bin = true
 
   to_origin[file] = file
 end

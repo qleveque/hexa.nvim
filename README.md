@@ -42,6 +42,8 @@ Simple hexadecimal editor for neovim.
 + `:HexToggleBin`: switches between binary and hexa representation
 + `:HexRun`: runs the binary file
 + `:HexGoto`: goes to the given hexa position
++ `:Hex`: open current file as a binary file
++ `:UnHex`: open original file
 
 ## Usage
 
