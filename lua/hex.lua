@@ -169,7 +169,7 @@ local load = function()
     com! -nargs=1 -bang HexSearchBack lua require'hex.actions'.search('?', <f-args>)
     com! -nargs=0 -bang HexReformat lua require'hex.actions'.dump_HEX()
     com! -nargs=0 -bang HexShow lua require'hex'.open_wins(true)
-    com! -nargs=0 -bang HexToggleBin lua require'hex'.toggle_bin()
+    com! -nargs=0 -bang HexBin lua require'hex'.toggle_bin()
     com! -nargs=0 -bang HexRun lua require'hex'.run()
     com! -nargs=0 -bang UnHex lua require'hex'.unhex()
 
