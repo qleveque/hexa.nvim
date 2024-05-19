@@ -107,6 +107,7 @@ local load = function()
     local f = refs.file()
     if f.hex.win.winnr ~= vim.api.nvim_get_current_win() then
       f.hex:set_current()
+      vim.cmd('setl nonu ft=hex')
     end
 
     local any = false
