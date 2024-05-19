@@ -38,7 +38,6 @@ Simple hexadecimal editor for neovim.
 + `:HexSearch`: performs a forward search ignoring spaces and newlines
 + `:HexSearchBack`: same as `HexSearch`, but backward
 + `:HexReformat`: properly reformats the hexa content
-+ `:HexShow`: shows the address and ASCII windows
 + `:HexBin`: switches between binary and hexa representation
 + `:HexRun`: runs the binary file
 + `:HexGoto`: goes to the given hexa position

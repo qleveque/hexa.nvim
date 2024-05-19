@@ -4,8 +4,7 @@ local Window = {}
 
 function Window:new()
   local newObj = {
-    winnr = nil,
-    show = true
+    winnr = nil
   }
   setmetatable(newObj, self)
   self.__index = self
@@ -13,7 +12,7 @@ function Window:new()
 end
 
 function Window:is_visible()
-  return self.winnr ~= nil and vim.api.nvim_win_is_valid(self.winnr)
+  return self.winnr ~= nil and u.is_window_open(self.winnr)
 end
 
 function Window:focus()
@@ -56,11 +55,6 @@ function Window:unset_scroll()
     vim.api.nvim_command(":setl nocursorbind noscrollbind")
     vim.api.nvim_set_current_win(winnr)
   end
-end
-
-function Window:on_closed()
-  self.show = false
-  self.winnr = nil
 end
 
 return Window

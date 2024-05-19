@@ -36,15 +36,20 @@ M.init = function(file)
   to_origin[file] = file
 end
 
-M.on_HEX_close = function()
-  local f = refs.file()
-  if f.hex.win.winnr ~= vim.api.nvim_get_current_win() then
-    return
+M.on_win_closed = function()
+  local f = M.file()
+  local winnr = vim.api.nvim_get_current_win()
+  if f.address.win.winnr ~= winnr then
+    f.address.win:close_if_visible()
   end
-  f.ascii.win:close_if_visible()
-  f.address.win:close_if_visible()
+  if f.ascii.win.winnr ~= winnr then
+    f.ascii.win:close_if_visible()
+  end
+  if f.hex.win.winnr ~= winnr then
+    f.hex.win:close_if_visible()
+  end
   if #vim.api.nvim_list_wins() == 1 then
-    vim.api.nvim_command('q')
+    vim.api.nvim_command('q!')
   end
 end
 

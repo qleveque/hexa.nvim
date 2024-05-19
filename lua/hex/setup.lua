@@ -16,7 +16,7 @@ M.setup_ASCII = function(cfg)
     " when outside changes finished, sync
     au FileChangedShellPost <buffer> lua require'hex'.on_changed_shell()
     " on closed
-    au WinClosed <buffer> lua require'hex.references'.file().ascii.win:on_closed()
+    au WinClosed <buffer> lua require'hex.references'.on_win_closed()
     " goto
     com! -nargs=1 -bang -buffer HexGoto lua require'hex.actions'.ASCII_goto(<f-args>)
   ]]
@@ -42,7 +42,7 @@ M.setup_ADDRESS = function(cfg)
     " when outside changes finished, sync
     au FileChangedShellPost <buffer> lua require'hex'.on_changed_shell()
     " on closed
-    au WinClosed <buffer> lua require'hex.references'.file().address.win:on_closed()
+    au WinClosed <buffer> lua require'hex.references'.on_win_closed()
   ]]
 end
 
@@ -59,7 +59,8 @@ M.setup_HEX = function(cfg)
     " close other windows when hidden
     au BufHidden <buffer> lua require'hex'.on_HEX_hidden()
     " close other windows instead of HEX
-    au WinClosed <buffer> lua require'hex.references'.on_HEX_close()
+    au WinClosed <buffer> lua require'hex.references'.on_win_closed()
+
     " remove scroll bind when saved
     au BufWritePost <buffer> lua require'hex'.on_HEX_saved()
     " goto

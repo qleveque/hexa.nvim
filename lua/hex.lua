@@ -80,6 +80,25 @@ local load = function()
     unset_scroll()
     f.ascii.win:close_if_visible()
     f.address.win:close_if_visible()
+    if f.ascii.buf ~= nil then
+      vim.api.nvim_buf_delete(f.ascii.buf, {})
+      f.ascii.buf = nil
+    end
+    if f.address.buf ~= nil then
+      vim.api.nvim_buf_delete(f.address.buf, {})
+      f.address.buf = nil
+    end
+
+    local buffers = vim.api.nvim_list_bufs()
+    for _, buf in ipairs(buffers) do
+      if buf ~= f.hex.buf then
+        local current_window = vim.api.nvim_get_current_win()
+        vim.api.nvim_set_current_win(f.hex.win.winnr)
+        vim.api.nvim_set_current_buf(buf)
+        vim.api.nvim_set_current_win(current_window)
+        return
+      end
+    end
   end
 
   M.open_wins = function(reset)
@@ -90,14 +109,9 @@ local load = function()
       f.hex:set_current()
     end
 
-    if reset ~= nil and reset == true then
-      f.address.win.show = true
-      f.ascii.win.show = true
-    end
-
     local any = false
 
-    if f.address.win.show and f.address.win.winnr == nil then
+    if f.address.win.winnr == nil then
       any = true
       vim.api.nvim_command(":vsplit "..f.address.file.." | vertical resize 10")
       vim.cmd('setl nonu ft=hexd noma winfixwidth stl=\\ ')
@@ -108,7 +122,7 @@ local load = function()
       f.hex.win:focus()
     end
 
-    if f.ascii.win.show and f.ascii.win.winnr == nil then
+    if f.ascii.win.winnr == nil then
       any = true
       local right = 'rightbelow '
       if M.cfg.ascii_left then right = '' end
@@ -168,7 +182,6 @@ local load = function()
     com! -nargs=1 -bang HexSearch lua require'hex.actions'.search('/', <f-args>)
     com! -nargs=1 -bang HexSearchBack lua require'hex.actions'.search('?', <f-args>)
     com! -nargs=0 -bang HexReformat lua require'hex.actions'.dump_HEX()
-    com! -nargs=0 -bang HexShow lua require'hex'.open_wins(true)
     com! -nargs=0 -bang HexBin lua require'hex'.toggle_bin()
     com! -nargs=0 -bang HexRun lua require'hex'.run()
     com! -nargs=0 -bang UnHex lua require'hex'.unhex()
