@@ -69,6 +69,7 @@ end
 
 M.replace_in_ASCII = function()
   local f= function()
+    u.move_to_col(refs.file().hex.col)
     local char = vim.fn.nr2char(vim.fn.getchar())
     local byte = string.byte(char)
     if refs.file().binary then
