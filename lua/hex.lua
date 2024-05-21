@@ -88,17 +88,6 @@ local load = function()
       vim.api.nvim_buf_delete(f.address.buf, {})
       f.address.buf = nil
     end
-
-    local buffers = vim.api.nvim_list_bufs()
-    for _, buf in ipairs(buffers) do
-      if buf ~= f.hex.buf then
-        local current_window = vim.api.nvim_get_current_win()
-        vim.api.nvim_set_current_win(f.hex.win.winnr)
-        vim.api.nvim_set_current_buf(buf)
-        vim.api.nvim_set_current_win(current_window)
-        return
-      end
-    end
   end
 
   M.open_wins = function(reset)
