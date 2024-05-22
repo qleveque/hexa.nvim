@@ -20,22 +20,15 @@ M.file = function()
 end
 
 M.init = function(file)
-  local new = files[file] == nil
+  if files[file] ~= nil then return end
+  local filename=vim.fn.fnamemodify(file, ":t")
 
-  if new then
-    files[file] = {}
-  end
-
+  files[file] = {}
   F = files[file]
 
   F.hex = File:new(file, to_origin)
   F.ascii = File:new(file, to_origin)
   F.address = File:new(file, to_origin)
-
-  if not new then
-    return
-  end
-
   F.binary = false
   F.origin = file
   F.open_as_bin = true

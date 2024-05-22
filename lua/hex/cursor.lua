@@ -32,17 +32,23 @@ local highlight = function(file, length)
 end
 
 local highlight_ASCII_cursor = function(ASCII_buf)
-  highlight(refs.file().ascii, 1)
+  if refs.file() ~= nil then
+    highlight(refs.file().ascii, 1)
+  end
 end
 
 local highlight_HEX_cursor = function(ASCII_buf)
-  local length
-  if refs.file().binary then length = 8 else length = 2 end
-  highlight(refs.file().hex, length)
+  if refs.file() ~= nil then
+    local length
+    if refs.file().binary then length = 8 else length = 2 end
+    highlight(refs.file().hex, length)
+  end
 end
 
 local highlight_ADDRESS_cursor = function(ASCII_buf)
-  highlight(refs.file().address, -1)
+  if refs.file() ~= nil then
+    highlight(refs.file().address, -1)
+  end
 end
 
 M.highlight = function()
